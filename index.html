@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="tk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Terbiýeçiniň Gündelik Iş Meýilnamasy</title>
+<meta name="theme-color" content="#0f5c63">
+<style>
+:root{--bg:#eef4f4;--card:#fff;--ink:#1d2b2e;--mute:#5b6d70;--brand:#0f5c63;--line:#d3e0e1;--mark:#f2b632;--ok:#1e7a46;--bad:#b3261e}
+:root[data-theme=dark]{--bg:#121b1d;--card:#1a2629;--ink:#e6eeee;--mute:#9bb0b3;--brand:#66c2c9;--line:#2c3c40;--ok:#6fd49b;--bad:#ff8a80}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:40px}
+.wrap{max-width:800px;margin:0 auto;padding:12px 14px}
+.top{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.top h1{flex:1;font-size:18px;margin:0;color:var(--brand);font-weight:700}
+button,input,select,textarea{font:inherit;color:var(--ink)}
+.sm{padding:7px 11px;border:1px solid var(--line);background:var(--card);border-radius:8px;cursor:pointer;font-size:14px;font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:12px}
+.card h2{font-size:16px;margin:0 0 10px;color:var(--brand);display:flex;align-items:center;justify-content:space-between}
+.row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);gap:10px}
+.row:last-child{border-bottom:0}
+.today-row{border-left:4px solid var(--brand);padding-left:8px;background:rgba(15,92,99,0.05);border-radius:4px}
+.badge{padding:4px 8px;border-radius:12px;font-size:12px;font-weight:600;white-space:nowrap}
+.badge.work{background:var(--ok);color:#fff}
+.badge.off{background:var(--bad);color:#fff}
+.btn{padding:11px 14px;border:0;border-radius:8px;background:var(--brand);color:#fff;cursor:pointer;font-weight:700;width:100%;margin-top:8px;font-size:15px}
+.mute{color:var(--mute);font-size:13px;font-weight:600}
+input,select,textarea{width:100%;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--card);margin-top:4px}
+ul{margin:6px 0;padding-left:20px}
+li{margin-bottom:4px}
+.cheat-box{background:rgba(242,182,50,0.15);border-left:5px solid var(--mark);padding:12px;border-radius:6px;margin-bottom:12px;font-size:13px}
+.print-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+.print-table th, .print-table td{border:1px solid #000;padding:8px;text-align:left;vertical-align:top}
+@media print{
+  .top,.noprint,.cheat-box{display:none!important}
+  body{background:#fff;padding:0;color:#000}
+  .card{border:0;padding:0;margin:0}
+  .print-table th, .print-table td{border:1px solid #000!important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top">
+  <h1 id="ttl">Terbiýeçiniň Gündelik Iş Meýilnamasy</h1>
+  <button class="sm" onclick="tl()" id="lb">RU</button>
+  <button class="sm" onclick="tt()">◐</button>
+</div>
+
+<!-- Официальная шапка учреждения -->
+<div class="card">
+  <div style="font-weight:700;font-size:15px;color:var(--brand)" id="orgTitle">Lebap welaýatynyň 5-nji ker, çala eşidýän we soň ker bolan çagalar üçin ýörite umumybilim berýän mekdep-internaty</div>
+  <div style="margin-top:4px;font-weight:600" id="userInfo">VI "A" synpynyň topar terbiýeçisi Ýusup Mirzaýewiň 2026-2027-nji okuw ýyly üçin iş MEÝILNAMASY</div>
+</div>
+
+<!-- Главная шпаргалка для проверок -->
+<div class="cheat-box noprint">
+  <b id="cheatTitle">Müdir we barlagçylar üçin kämil gözükdiriji (Şpargalka):</b>
+  <ul style="margin:4px 0 0;padding-left:18px" id="cheatList">
+    <li><b>1. Okuw tagtasy (Fonetika + Profil):</b> Çep tarapda art. profil («gorlo», dodak), 4 tapgyr (Ses, Solog, Söz, Aňlatma).</li>
+    <li><b>2. Öý işleri we Esbaplar:</b> Mugallymlaryň beren tabşyryklary we zähmet esbaplary.</li>
+    <li><b>3. Sözleýiş toplumy:</b> Okuwçylaryň tagtaya çykyp, sözleri (soska, şeker, saдик) aýdyň aýtmagy.</li>
+    <li><b>4. Howpsuzlyk we Saglyk:</b> Gündelik instruktaj, saglyk ýagdaýyna gözegçirlik.</li>
+  </ul>
+</div>
+
+<!-- График смен -->
+<div class="card">
+  <h2 id="schedH2">Hepdelik iş tertibi (Ýusup Mirzaýew)</h2>
+  <div id="schedList"></div>
+</div>
+
+<!-- Генератор -->
+<div class="card noprint">
+  <h2 id="genH2">Meýilnama generatory</h2>
+  
+  <label class="mute" id="lblDaySelect">Günüň meýilnamasyny saýlaň:</label>
+  <select id="daySelect" onchange="loadDayTemplate()">
+    <option value="1">Duşenbe — Çekimli sesler (Erki günüň tertibi)</option>
+    <option value="2">Sişenbe — Dudak sesleri / Dynç güni (D)</option>
+    <option value="3">Çarşenbe — Dil sesleri we Öý işleri (+6b)</option>
+    <option value="41" selected>Penşenbe — Medeni-taryhy terbiýe ("Astana baba", "Dehistan")</option>
+    <option value="42">Penşenbe — Hojalyk zähmeti (Egin-eşik we synp otagy)</option>
+    <option value="5">Anna — Şyşyrdyjy sesler we Öý işleri</option>
+    <option value="6">Şenbe — Arassaçylyk we abadanlaşdyryş güni (Hammam)</option>
+    <option value="0">Ýekşenbe — Dynç güni (Sport we medeni çäreler)</option>
+  </select>
+
+  <label class="mute" id="lblGoal" style="margin-top:10px;display:block">Maksady (Цель):</label>
+  <textarea id="goalInput" rows="3"></textarea>
+
+  <label class="mute" id="lblPhon" style="margin-top:10px;display:block">1. Okuw tagtasynda: Fonetika maşky (Artikulýasiýa profili + sözler):</label>
+  <textarea id="phonInput" rows="5"></textarea>
+
+  <label class="mute" id="lblHomework" style="margin-top:10px;display:block">2. Okuw tagtasynda: Öý işleri / Esbaplar:</label>
+  <input type="text" id="homeworkInput">
+
+  <label class="mute" id="lblTopic" style="margin-top:10px;display:block">3. Sözleýiş toplumy (Tagtada çykyş we howpsuzlyk):</label>
+  <textarea id="topicInput" rows="4"></textarea>
+
+  <button class="btn" onclick="buildOfficialPlan()" id="btnGen">Resmi meýilnamany düzmek</button>
+</div>
+
+<!-- Результат -->
+<div id="planResult"></div>
+
+<div class="card noprint" style="text-align:center">
+  <button class="btn" onclick="window.print()" id="btnPrint">Çap etmek / PDF göçürmek</button>
+</div>
+</div>
+
+<script>
+var L = 'tk';
+
+var D = {
+  tk: {
+    ttl: 'Terbiýeçiniň Gündelik Iş Meýilnamasy',
+    org: 'Lebap welaýatynyň 5-nji ker, çala eşidýän we soň ker bolan çagalar üçin ýörite umumybilim berýän mekdep-internaty',
+    user: 'VI "A" synpynyň topar terbiýeçisi Ýusup Mirzaýewiň 2026-2027-nji okuw ýyly üçin iş MEÝILNAMASY',
+    cheatTitle: 'Müdir we barlagçylar üçin kämil gözükdiriji (Şpargalka):',
+    cheatList: [
+      '<b>1. Okuw tagtasy (Fonetika + Profil):</b> Çep tarapda art. profil («gorlo», dodak), 4 tapgyr.',
+      '<b>2. Öý işleri we Esbaplar:</b> Mugallymlaryň beren tabşyryklary we zähmet esbaplary.',
+      '<b>3. Sözleýiş toplumy:</b> Okuwçylaryň tagtaya çykyp, sözleri (soska, şeker, saдик) aýdyň aýtmagy.',
+      '<b>4. Howpsuzlyk we Saglyk:</b> Gündelik instruktaj, saglyk ýagdaýyna gözegçirlik.'
+    ],
+    schedH2: 'Hepdelik iş tertibi (Ýusup Mirzaýew)',
+    genH2: 'Meýilnama generatory',
+    lblDaySelect: 'Günüň meýilnamasyny saýlaň:',
+    lblGoal: 'Maksady (Цель):',
+    lblPhon: '1. Okuw tagtasynda: Fonetika maşky (Artikulýasiýa profili + sözler):',
+    lblHomework: '2. Okuw tagtasynda: Öý işleri / Esbaplar:',
+    lblTopic: '3. Sözleýiş toplumy (Tagtada çykyş we howpsuzlyk):',
+    btnGen: 'Resmi meýilnamany düzmek',
+    btnPrint: 'Çap etmek / PDF göçürmek',
+    days: ['Ýekşenbe', 'Duşenbe', 'Sişenbe', 'Çarşenbe', 'Penşenbe', 'Anna', 'Şenbe'],
+    off: 'Dynç güni (D)',
+    todayBadge: 'Şu gün',
+    colDay: 'Wagt we Tapgyr',
+    colContent: 'Işiň ady we mazmuny',
+    selectOptions: {
+      "1": "Duşenbe — Çekimli sesler (Erki günüň tertibi)",
+      "2": "Sişenbe — Dudak sesleri / Dynç güni (D)",
+      "3": "Çarşenbe — Dil sesleri we Öý işleri (+6b)",
+      "41": "Penşenbe — Medeni-taryhy terbiýe (\"Astana baba\", \"Dehistan\")",
+      "42": "Penşenbe — Hojalyk zähmeti (Egin-eşik we synp otagy)",
+      "5": "Anna — Şyşyrdyjy sesler we Öý işleri",
+      "6": "Şenbe — Arassaçylyk we abadanlaşdyryş güni (Hammam)",
+      "0": "Ýekşenbe — Dynç güni (Sport we medeni çäreler)"
+    },
+    templates: {
+      "1": {
+        titleType: 'Erki günüň tertibi we Öý işleri',
+        goal: 'Çagalaryň irki günüň tertibini berjaý etmeklerini gazanmak, öý işlerini ýerine ýetirmek.',
+        phon: 'Artikulýasiýa profili (Çep tarapda: agyz, gorlo, dodak)\n1) Ses: [A], [O], [U]\n2) Solog: A-a-a, O-o-o\n3) Söz: Alma, Otuw, Un\n4) Aňlatma: Alma lezzetli.',
+        homework: 'Matematika: №12, Ene dili: 45-nji gönükme.',
+        speech: '«- Salam çagalar, ertiriňiz haýyrly bolsun!\n- Çagalar tagtaya çykyp, profiliň kömegi bilen sözleri (soska, saдик) aýtdylar.\n- Howpsuzlyk instruktajy geçirildi.»',
+        tasks: [
+          '1. 07:00 – 08:30: Ukudan oýarmak, beden maşklary, ertirlik nahary.',
+          '2. 16:00 – 18:30: Özbaşdak taýýarlyk (Tagtada profil boýunça fonetika we öý işleri).'
+        ]
+      },
+      "2": {
+        titleType: 'Dynç güni (D)',
+        goal: 'Çagalaryň dynç alyş gününi guramaçylykly geçirmek.',
+        phon: 'Artikulýasiýa profili\n1) Ses: [P], [B], [M]\n2) Solog: Pa-po-pu\n3) Söz: Nan, Balyk\n4) Aňlatma: Nan süýji.',
+        homework: '—',
+        speech: '«Maňa şekerli çaý beriň. Men ellerimi ýuwdum.»',
+        tasks: ['Dynç güni (D).']
+      },
+      "3": {
+        titleType: 'Dil sesleri we Öý işleri (+6b)',
+        goal: 'Dil seslerini türgenleşdirmek we öý işlerini ýerine ýetirmek.',
+        phon: 'Artikulýasiýa profili (Dil we dişler)\n1) Ses: [T], [D], [N]\n2) Solog: Ta-ta-ta, At-ot-ut\n3) Söz: Top, Depder, Nan\n4) Aňlatma: Depder arassa.',
+        homework: 'Matematika: Tegelek mysallar, Ene dili: Düzgünler.',
+        speech: '«Biz sözleri okadyk, okuwçylar tagtaya çykyp jogap berdiler.»',
+        tasks: [
+          '1. 07:00 – 08:30 (+6b): Smenany kabul etmek we ertirlik.',
+          '2. 16:00 – 18:30: Özbaşdak taýýarlyk.'
+        ]
+      },
+      "41": {
+        titleType: 'Medeni-taryhy terbiýe ("Astana baba", "Dehistan")',
+        goal: 'Berkarar döwletimiziň taryhy we medeni mirasyny öwrenmek, okuwçylarda ata-babalardan galan milli mirasymyza sarpaly garamak duýgusyny terbiýelemek.',
+        phon: 'Artikulýasiýa profili (Syzgyryjy sesler)\n1) Ses: [S], [Z], [C]\n2) Solog: Sa-so-su, As-os-us\n3) Söz: Suw, Sagat, Taryh\n4) Aňlatma: Suw akýar: S-S-S.',
+        homework: 'Kitaplar, ýazgylar, depderler',
+        speech: '«Taryhy ýadygärlikler — halkymyzyň buýsanjy. Okuwçylar tagtaya çykyp, "soska", "şeker", "saдик" sözlerini we taryhy sözleri profil boýunça aýdyň aýtdylar. Saglyk ýagdaýy barlanyldy.»',
+        tasks: [
+          '1. 13:05 – 14:00: Smenany kabul etmek we günortanlyk nahar.',
+          '2. 14:00 – 16:00: Medeni-taryhy terbiýe sagady ("Astana baba", "Dehistan").',
+          '3. 16:00 – 18:30: Özbaşdak taýýarlyk (Fonetika maşky we öý işleri).',
+          '4. 19:00 – 21:05: Agşamky nahar, TV tomaşa etmek.'
+        ]
+      },
+      "42": {
+        titleType: 'Hojalyk zähmeti (Egin-eşik we synp otagy)',
+        goal: 'Çagalary işiň usuly bilen tanyşdyrmak, olary zähmete uýgunlaşdyrmak, öz-özüňe hyzmat etmek usulyny öwretmek.',
+        phon: 'Artikulýasiýa profili\n1) Ses: [S], [Z]\n2) Solog: Sa-so-su\n3) Söz: Eşik, Ütük, Ýelim\n4) Aňlatma: Eşigi arassa saklamaly.',
+        homework: 'Egin-eşikler, bedre, ütük, ýelim, krem, iňňe',
+        speech: '«Egin-eşikleri mydama arassa saklamaly. Okuwçylar tagtaya çykyp zähmet sözlerini aýtdylar. Ütük basyp öwrendim. Kitaplary bejerdim.»',
+        tasks: [
+          '1. Egin-eşiklere ideg etmek, olary ütüklemek.',
+          '2. Ýatylýan otagdaky haly-palaslara ideg etmek.',
+          '3. Kitaplary bejermek, aýakgaplara ideg etmek.',
+          '4. Synp otagynda oturýan ýerini arassalamak.'
+        ]
+      },
+      "5": {
+        titleType: 'Şyşyrdyjy sesler we Öý işleri',
+        goal: 'Şyşyrdyjy sesleri dogry çykarmaga üns bermek.',
+        phon: 'Artikulýasiýa profili (Şyşyrdyjy sesler)\n1) Ses: [Ş], [Ž], [Ç]\n2) Solog: Şa-şa-şa, Aş-oş-uş\n3) Söz: Şorba, Şeker, Çay\n4) Aňlatma: Şorba yssy.',
+        homework: 'Tebigy bilim: Soraglara jogap, Iňlis dili.',
+        speech: '«Men eşiklerimi ýuwdum. Okuwçylar tagtada şirin sözleri (şeker, soska) okadylar.»',
+        tasks: ['1. 07:00 – 08:30: Ertirlik.', '2. 16:00 – 18:30: Özbaşdak taýýarlyk.']
+      },
+      "6": {
+        titleType: 'Arassaçylyk we abadanlaşdyryş güni',
+        goal: 'Arassaçylyk we abadanlaşdyryş günini guramaçylykly geçirmek, şahsy arassaçylyk endiklerini ösdürmek.',
+        phon: 'Artikulýasiýa profili\n1) Ses: [R], [L]\n2) Solog: Ra-ro-ru, Ar-or-ur\n3) Söz: Ruh, Taryh, Lale\n4) Aňlatma: Motor zwwuldaýar: R-R-R.',
+        homework: 'Sabyn, derman, diş şetkasy, şampun, el-sülgi',
+        speech: '«Men hammama düşdüm, arassa boldum. Okuwçylar tagtaya çykyp profil boýunça sözleri aýtdylar.»',
+        tasks: [
+          '1. 13:05 – 16:00: Hammam we şahsy arassaçylyk işleri.',
+          '2. 16:00 – 18:30: Özbaşdak taýýarlyk.',
+          '3. 19:00 – 21:05: Agşamky nahar we smenany tabşyrmak.'
+        ]
+      },
+      "0": {
+        titleType: 'Dynç güni (Sport we medeni çäreler)',
+        goal: 'Çagalaryň dynç günini guramaçylykly geçirmek, zähmet endiklerini ösdürmek.',
+        phon: 'Artikulýasiýa profili (Gaýtalaw)\n1) Ses: Gaýtalaw\n2) Solog: A-Sa-Ra\n3) Söz: Oýun, Park\n4) Aňlatma: Biz oýnadak.',
+        homework: 'Sport esbaplary, oýunçaklar, TV',
+        speech: '«- Salam çagalar, ertiriňiz haýyrly bolsun!\n- Okuwçylar tagtaya çykyp oýun sözlerini aýtdylar.\n- Biz oýun oýnadyk, gezelenç etdik.»',
+        tasks: [
+          '1. 12:35 – 14:00: Smenany kabul etmek, gezelenç.',
+          '2. 14:00 – 16:00: Milli we sport oýunlary.',
+          '3. 16:00 – 18:30: Medeni dynç alyş, TV tomaşa etmek.',
+          '4. 19:00 – 21:05: Agşamky nahar we ukuga taýýarlyk.'
+        ]
+      }
+    }
+  },
+  ru: {
+    ttl: 'План самоподготовки воспитателя',
+    org: 'Специализированная школа-интернат №5 для глухих и слабослышащих детей Лебапского велаята',
+    user: 'ПЛАН РАБОТЫ классного воспитателя VI "А" класса Юсупа Мурзаева на 2026-2027 учебный год',
+    cheatTitle: 'Шпаргалка при проверке руководством (директор/завуч):',
+    cheatList: [
+      '<b>1. На доске (Фонетика + Профиль):</b> Слева арх. профиль («горло», зубы, губы), 4 этапа.',
+      '<b>2. Домашние задания:</b> Задания от учителей-предметников и инвентарь.',
+      '<b>3. Речевой материал:</b> Выход детей к доске, проговаривание слов (соска, şeker, saдик).',
+      '<b>4. Безопасность и здоровье:</b> Ежедневный инструктаж по ТБ, контроль медработника.'
+    ],
+    schedH2: 'Недельный график работы (Юсуп Мурзаев)',
+    genH2: 'Генератор плана',
+    lblDaySelect: 'Выберите день для плана:',
+    lblGoal: 'Цель (Maksady):',
+    lblPhon: '1. На доске (Фонетическая зарядка - профиль + слова):',
+    lblHomework: '2. На доске (Домашние задания / Инвентарь):',
+    lblTopic: '3. Речевой материал (выход к доске и ТБ):',
+    btnGen: 'Сформировать официальный план',
+    btnPrint: 'Печать / Скачать в PDF',
+    days: ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'],
+    off: 'Выходной (D)',
+    todayBadge: 'Сегодня',
+    colDay: 'Время и этап',
+    colContent: 'Содержание работы (Самоподготовка и доска)',
+    selectOptions: {
+      "1": "Понедельник — Гласные звуки (Утренний режим дня)",
+      "2": "Вторник — Губные звуки / Выходной (D)",
+      "3": "Среда — Язычные звуки и Д/З (+6b)",
+      "41": "Четверг — Культурно-историческое воспитание (\"Астана-баба\", \"Дехистан\")",
+      "42": "Четверг — Хозяйственный труд (Одежда и классная комната)",
+      "5": "Пятница — Шипящие звуки и Д/З",
+      "6": "Суббота — День чистоты и благоустройства (Баня)",
+      "0": "Воскресенье — Выходной день (Спорт и культурные мероприятия)"
+    },
+    templates: {
+      "1": {
+        titleType: 'Утренний режим дня и выполнение Д/З',
+        goal: 'Соблюдение утреннего режима дня, аккуратная заправка постели, выполнение домашних заданий.',
+        phon: 'Артикуляционный профиль (слева от доски: горло, губы, язык)\n1) Звук: [А], [О], [У]\n2) Слог: А-а-а, О-o-o\n3) Слово: Alma, Otuw\n4) Фраза: Alma lezzetli.',
+        homework: 'Математика: №12, Родной язык: упр. 45.',
+        speech: '«- Здравствуйте, дети, доброе утро!\n- Дети выходили к доске, опираясь на профиль, проговаривали слова (соска, садик).\n- Проведен инструктаж по технике безопасности.»',
+        tasks: [
+          '1. 07:00 – 08:30: Подъем, зарядка, завтрак и сбор в школу.',
+          '2. 16:00 – 18:30: Самоподготовка (Фонетика по профилю и д/з).'
+        ]
+      },
+      "2": {
+        titleType: 'Выходной день (D)',
+        goal: 'Организация отдыха детей.',
+        phon: 'Артикуляционный профиль\n1) Звук: [П], [Б], [М]\n2) Solog: Pa-po-pu\n3) Söz: Nan, Balyk\n4) Aňlatma: Nan süýji.',
+        homework: '—',
+        speech: '«Дайте мне чай с сахаром. Я помыл руки.»',
+        tasks: ['Выходной день (D).']
+      },
+      "3": {
+        titleType: 'Язычные согласные и Д/З (+6b)',
+        goal: 'Отработка язычных согласных и самоподготовка.',
+        phon: 'Артикуляционный профиль (положение языка и зубов)\n1) Звук: [T], [D], [N]\n2) Слог: Ta-ta-ta, At-ot-ut\n3) Слово: Top, Depder, Nan\n4) Фраза: Depder arassa.',
+        homework: 'Математика: примеры, Родной язык: правила.',
+        speech: '«Мы прочитали слова, учащиеся выходили к доске и отвечали.»',
+        tasks: [
+          '1. 07:00 – 08:30 (+6b): Прием смены и завтрак.',
+          '2. 16:00 – 18:30: Самоподготовка.'
+        ]
+      },
+      "41": {
+        titleType: 'Культурно-историческое воспитание ("Астана-баба", "Дехистан")',
+        goal: 'Изучение исторического и культурного наследия страны, воспитание уважения к древним памятникам.',
+        phon: 'Артикуляционный профиль (Свистящие звуки)\n1) Звук: [С], [З], [Ц]\n2) Слог: Sa-so-su, As-os-us\n3) Слово: Suw, Sagat, Taryh\n4) Фраза: Suw akýar: S-S-S.',
+        homework: 'Книги, записи, тетради',
+        speech: '«Исторические памятники — гордость нашего народа. Дети выходили к доске, глядя на профиль горла и губ, чётко проговаривали слова (соска, шекер, садик) и обсуждали памятники "Астана-баба" и "Дехистан". Зафиксировано состояние здоровья с медработником.»',
+        tasks: [
+          '1. 13:05 – 14:00: Прием смены и обед.',
+          '2. 14:00 – 16:00: Воспитательный час по истории.',
+          '3. 16:00 – 18:30: Самоподготовка (Фонетика по профилю и д/з).',
+          '4. 19:00 – 21:05: Ужин, просмотр ТВ.'
+        ]
+      },
+      "42": {
+        titleType: 'Хозяйственный труд (Одежда и классная комната)',
+        goal: 'Обучение детей навыкам самообслуживания, уходу за одеждой, обувью, коврами и ремонту книг.',
+        phon: 'Артикуляционный профиль\n1) Звук: [С], [З]\n2) Solog: Sa-so-su\n3) Söz: Eşik, Ütük, Ýelim\n4) Aňlatma: Eşigi arassa saklamaly.',
+        homework: 'Вешалки, ведро, утюг, клей, крем, иголка',
+        speech: '«Одежду нужно всегда держать в чистоте. Учащиеся выходили к доске, проговаривали слова по труду. Я постирал вещи, учился гладить утюгом.»',
+        tasks: [
+          '1. Уход за одеждой, глажка утюгом.',
+          '2. Уход за коврами в спальной комнате.',
+          '3. Ремонт книг, уход за обувью.',
+          '4. Уборка своего места в классной комнате.'
+        ]
+      },
+      "5": {
+        titleType: 'Шипящие согласные и Д/З',
+        goal: 'Отработка правильного произношения шипящих звуков.',
+        phon: 'Артикуляционный профиль (Шипящие звуки)\n1) Звук: [Ш], [Ж], [Ч]\n2) Слог: Ша-ша-ша, Аш-ош-уш\n3) Слово: Şorba, Şeker, Çay\n4) Фраза: Şorba yssy.',
+        homework: 'Естествознание: ответы на вопросы, Английский язык.',
+        speech: '«Я постирал вещи. Дети выходили к доске, проговаривали слова (шекер, soska).»',
+        tasks: [
+          '1. 07:00 – 08:30: Завтрак.',
+          '2. 16:00 – 18:30: Самоподготовка.'
+        ]
+      },
+      "6": {
+        titleType: 'День чистоты и благоустройства (Баня)',
+        goal: 'Организованное проведение дня чистоты, привитие навыков личной гигиены.',
+        phon: 'Артикуляционный профиль\n1) Звук: [Р], [Л]\n2) Solog: Ra-ro-ru, Ar-or-ur\n3) Söz: Ruh, Taryh, Lale\n4) Aňlatma: Motor zwwuldaýar: R-R-R.',
+        homework: 'Мыло, шампунь, полотенце, зубная щетка',
+        speech: '«Я сходил в баню, стал чистым. Дети выходили к доске, проговаривали гигиенические слова по профилю.»',
+        tasks: [
+          '1. 13:05 – 16:00: Баня и личная гигиена.',
+          '2. 16:00 – 18:30: Самоподготовка.',
+          '3. 19:00 – 21:05: Ужин и сдача смены.'
+        ]
+      },
+      "0": {
+        titleType: 'Выходной день (Спорт и культурные мероприятия)',
+        goal: 'Организация полноценного отдыха детей, проведение спортивных и национальных игр.',
+        phon: 'Артикуляционный профиль (Повторение)\n1) Звук: Повторение\n2) Solog: A-Sa-Ra\n3) Söz: Oýun, Park\n4) Aňlatma: Biz oýnadak.',
+        homework: 'Спортивный инвентарь, игры, ТВ',
+        speech: '«- Здравствуйте, дети, доброе утро!\n- Дети выходили к доске, проговаривали слова по играм.\n- Мы играли в национальные и спортивные игры.»',
+        tasks: [
+          '1. 12:35 – 14:00: Прием детей, прогулка.',
+          '2. 14:00 – 16:00: Национальные и спортивные игры.',
+          '3. 16:00 – 18:30: Культурный отдых, просмотр ТВ.',
+          '4. 19:00 – 21:05: Ужин и подготовка ко сну.'
+        ]
+      }
+    }
+  }
+};
+
+var schedule = [
+  { time: '12:35 - 21:05 (Ýekşenbe)', off: false },                            
+  { time: '07:00 - 08:30', off: false },                            
+  { time: 'D (Dynç güni)', off: true },                                          
+  { time: '+6b | 07:00 - 08:30', off: false },                      
+  { time: '13:05 - 21:05 (Medeni-taryhy terbiýe)', off: false },     
+  { time: '07:00 - 08:30', off: false },                            
+  { time: '13:05 - 21:05 (Arassaçylyk güni)', off: false }          
+];
+
+function render(){
+  document.documentElement.lang = L;
+  var d = D[L];
+  document.getElementById('ttl').textContent = d.ttl;
+  document.getElementById('orgTitle').textContent = d.org;
+  document.getElementById('userInfo').textContent = d.user;
+  document.getElementById('cheatTitle').innerHTML = d.cheatTitle;
+  
+  var cHtml = '';
+  d.cheatList.forEach(function(item){ cHtml += '<li>' + item + '</li>'; });
+  document.getElementById('cheatList').innerHTML = cHtml;
+
+  document.getElementById('schedH2').textContent = d.schedH2;
+  document.getElementById('genH2').textContent = d.genH2;
+  document.getElementById('lblDaySelect').textContent = d.lblDaySelect;
+  document.getElementById('lblGoal').textContent = d.lblGoal;
+  document.getElementById('lblPhon').textContent = d.lblPhon;
+  document.getElementById('lblHomework').textContent = d.lblHomework;
+  document.getElementById('lblTopic').textContent = d.lblTopic;
+  document.getElementById('btnGen').textContent = d.btnGen;
+  document.getElementById('btnPrint').textContent = d.btnPrint;
+  document.getElementById('lb').textContent = L === 'tk' ? 'RU' : 'TK';
+
+  var sel = document.getElementById('daySelect');
+  var currentVal = sel.value || "41";
+  sel.innerHTML = '';
+  for(var key in d.selectOptions){
+    var opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = d.selectOptions[key];
+    if(key === currentVal) opt.selected = true;
+    sel.appendChild(opt);
+  }
+
+  var todayIdx = new Date().getDay();
+  var h = '';
+  for(var i = 0; i < 7; i++){
+    var idx = (i === 6) ? 0 : i + 1; 
+    var isToday = (idx === todayIdx);
+    var item = schedule[idx];
+
+    h += '<div class="row ' + (isToday ? 'today-row' : '') + '">';
+    h += '<div><b>' + d.days[idx] + '</b>' + (isToday ? ' <span style="color:var(--brand);font-size:12px">(' + d.todayBadge + ')</span>' : '') + '</div>';
+    h += '<div><span class="badge ' + (item.off ? 'off' : 'work') + '">' + (item.off ? d.off : item.time) + '</span></div>';
+    h += '</div>';
+  }
+  document.getElementById('schedList').innerHTML = h;
+  loadDayTemplate();
+}
+
+function loadDayTemplate(){
+  var dayVal = document.getElementById('daySelect').value || "41";
+  var d = D[L];
+  var tpl = d.templates[dayVal] || d.templates["41"];
+
+  document.getElementById('goalInput').value = tpl.goal;
+  document.getElementById('phonInput').value = tpl.phon;
+  document.getElementById('homeworkInput').value = tpl.homework;
+  document.getElementById('topicInput').value = tpl.speech;
+}
+
+function buildOfficialPlan(){
+  var d = D[L];
+  var dayVal = document.getElementById('daySelect').value || "41";
+  var tpl = d.templates[dayVal] || d.templates["41"];
+  var goal = document.getElementById('goalInput').value;
+  var phon = document.getElementById('phonInput').value;
+  var homework = document.getElementById('homeworkInput').value;
+  var speech = document.getElementById('topicInput').value;
+  var now = new Date();
+  var dateStr = now.getDate() + '.' + (now.getMonth() + 1) + '.' + now.getFullYear();
+
+  var html = '<div class="card"><h2 style="text-align:center;display:block;margin-bottom:4px">' + d.ttl + '</h2>';
+  html += '<div style="font-size:13px;margin-bottom:12px;text-align:center"><b>Sene / Дата:</b> ' + dateStr + '</div>';
+  
+  html += '<table class="print-table">';
+  html += '<tr><th style="width:25%">' + d.colDay + '</th><th style="width:75%">' + d.colContent + '</th></tr>';
+  
+  html += '<tr>';
+  html += '<td><b>' + tpl.titleType + '</b><br><br><small>VI "A" synpy</small></td>';
+  html += '<td><b>Maksady:</b> ' + goal + '<br><br><b>1. Okuw tagtasynda (Artikulýasiýa profili we Fonetika - 4 tapgyr):</b><br><i>' + phon.replace(/\n/g, '<br>') + '</i><br><br><b>2. Okuw tagtasynda (Öý işleri / Esbaplar):</b> <i>' + homework + '</i><br><br><b>3. Sözleýiş toplumy (Tagtada çykyş we howpsuzlyk):</b><br><i>' + speech.replace(/\n/g, '<br>') + '</i><br><br><b>Işiň mazmuny:</b><ul>';
+  
+  tpl.tasks.forEach(function(t){
+    html += '<li>' + t + '</li>';
+  });
+  
+  html += '</ul></td>';
+  html += '</tr>';
+  html += '</table></div>';
+
+  document.getElementById('planResult').innerHTML = html;
+}
+
+function tl(){
+  L = L === 'tk' ? 'ru' : 'tk';
+  render();
+}
+
+function tt(){
+  var root = document.documentElement;
+  if(root.getAttribute('data-theme') === 'dark'){
+    root.removeAttribute('data-theme');
+  } else {
+    root.setAttribute('data-theme', 'dark');
+  }
+}
+
+render();
+buildOfficialPlan();
+</script>
+</body>
+</html>
