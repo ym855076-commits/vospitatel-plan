@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="tk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Terbiýeçiniň Gündelik Iş Meýilnamasy</title>
+<meta name="theme-color" content="#0f5c63">
+<style>
+:root{--bg:#eef4f4;--card:#fff;--ink:#1d2b2e;--mute:#5b6d70;--brand:#0f5c63;--line:#d3e0e1;--ok:#1e7a46;--bad:#b3261e}
+:root[data-theme=dark]{--bg:#121b1d;--card:#1a2629;--ink:#e6eeee;--mute:#9bb0b3;--brand:#66c2c9;--line:#2c3c40;--ok:#2d8a57;--bad:#c9473e}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:40px}
+.wrap{max-width:800px;margin:0 auto;padding:12px 14px}
+.top{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.top h1{flex:1;font-size:18px;margin:0;color:var(--brand)}
+button,input,select,textarea{font:inherit;color:var(--ink)}
+.sm{padding:7px 11px;border:1px solid var(--line);background:var(--card);border-radius:8px;cursor:pointer;font-size:14px;font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:12px}
+.card h2{font-size:16px;margin:0 0 10px;color:var(--brand)}
+.row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);gap:10px}
+.row:last-child{border:0}
+.today{border-left:4px solid var(--brand);padding-left:8px;border-radius:4px}
+.badge{padding:4px 8px;border-radius:12px;font-size:12px;font-weight:600;color:#fff;background:var(--ok)}
+.badge.off{background:var(--bad)}
+.btn{padding:11px 14px;border:0;border-radius:8px;background:var(--brand);color:#fff;cursor:pointer;font-weight:700;width:100%;margin-top:8px}
+:root[data-theme=dark] .btn{color:#06292c}
+.btn.alt{background:var(--card);color:var(--brand);border:1px solid var(--brand)}
+.mute{color:var(--mute);font-size:13px;font-weight:600;display:block;margin-top:10px}
+input,select,textarea{width:100%;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--card);margin-top:4px}
+.cheat{background:rgba(242,182,50,.15);border-left:5px solid #f2b632;padding:12px;border-radius:6px;margin-bottom:12px;font-size:13px}
+.cheat ul{margin:4px 0 0;padding-left:18px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{border:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+.chk{display:none;position:fixed;inset:0;z-index:9;background:var(--bg);overflow:auto;padding:16px;font-size:19px;padding-top:max(16px,env(safe-area-inset-top))}
+.chk.on{display:block}
+.chk h3{margin:14px 0 4px;color:var(--brand);font-size:17px}
+.chk .big{font-size:24px;font-weight:700}
+.chk .qa{border-left:4px solid var(--brand);padding-left:10px;margin:8px 0;font-size:17px}
+@media print{
+:root,:root[data-theme=dark]{--bg:#fff;--card:#fff;--ink:#000;--line:#000;--brand:#000}
+.top,.noprint,.cheat,.chk{display:none!important}
+body{background:#fff;color:#000;padding:0}
+.card{border:0;padding:0;margin:0 0 8px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top"><h1 id="ttl"></h1><button class="sm" onclick="setLang()" id="lb"></button><button class="sm" onclick="chk(1)" id="bChk">✔</button><button class="sm" onclick="setTheme()">◐</button></div>
+<div class="card"><b id="org" style="color:var(--brand)"></b><div id="usr" style="margin-top:4px;font-weight:600"></div></div>
+<div class="cheat noprint"><b id="chT"></b><ul id="chL"></ul></div>
+<div class="card"><h2 id="schH"></h2><div id="sch"></div></div>
+<div class="card noprint">
+<h2 id="genH"></h2>
+<label class="mute" id="lDay"></label><select id="daySel" onchange="loadDay()"></select>
+<label class="mute" id="lDate"></label><input type="date" id="dateIn" onchange="build()">
+<label class="mute" id="lGoal"></label><textarea id="goal" rows="2" oninput="save()"></textarea>
+<label class="mute" id="lPhon"></label><textarea id="phon" rows="7" oninput="save()"></textarea>
+<label class="mute" id="lHw"></label><input id="hw" oninput="save()">
+<label class="mute" id="lSp"></label><textarea id="sp" rows="4" oninput="save()"></textarea>
+<button class="btn" onclick="build()" id="bGen"></button>
+<button class="btn alt" onclick="resetDay()" id="bRes"></button>
+</div>
+<div id="out"></div>
+<div class="card noprint">
+<button class="btn" onclick="window.print()" id="bPr"></button>
+<button class="btn alt" onclick="copyPlan()" id="bCp"></button>
+</div>
+</div>
+<div class="chk" id="chk"></div>
+<script>
+var KEYS=[1,2,3,4,5,6,0];
+var SCH=[['12:35 – 21:05',0],['07:00 – 08:30',0],['D',1],['+6b | 07:00 – 08:30',0],['13:05 – 21:05',0],['07:00 – 08:30',0],['13:05 – 21:05',0]];
+var U={
+tk:{ttl:'Terbiýeçiniň Gündelik Iş Meýilnamasy',
+org:'Lebap welaýatynyň 5-nji ker, çala eşidýän we soň ker bolan çagalar üçin ýörite umumybilim berýän mekdep-internaty',
+usr:'VI «A» synpynyň topar terbiýeçisi Ýusup Mirzaýewiň 2026-2027-nji okuw ýyly üçin iş MEÝILNAMASY',
+chT:'Barlag üçin gysgaça (Şpargalka):',
+chL:['<b>1. Tagta:</b> çep tarapda artikulýasiýa profili, fonetika maşky (dem, artikulýasiýa, ses → bogun → söz → aňlatma).','<b>2. Öý işleri we esbaplar</b> tagtada ýazylan.','<b>3. Sözleýiş:</b> okuwçylar tagtanyň ýanyna çykyp sözleri aýdyň aýdýarlar.','<b>4. Howpsuzlyk we saglyk:</b> gündelik instruktaj we saglyk gözegçiligi.'],
+schH:'Hepdelik iş tertibi',genH:'Meýilnama generatory',lDay:'Gün:',lDate:'Sene:',lGoal:'Maksady:',
+lPhon:'1. Tagtada: fonetika maşky (profil, dem, ses, bogun, söz, aňlatma):',lHw:'2. Tagtada: öý işleri / esbaplar:',lSp:'3. Sözleýiş we howpsuzlyk:',
+gen:'Resmi meýilnamany düzmek',res:'Şablona gaýtarmak',pr:'Çap etmek / PDF',cp:'Tekst göçürmek',copied:'Göçürildi',
+days:['Ýekşenbe','Duşenbe','Sişenbe','Çarşenbe','Penşenbe','Anna','Şenbe'],off:'Dynç güni (D)',today:'Şu gün',
+cA:'Wagt we tapgyr',cB:'Işiň mazmuny',goalL:'Maksady',s1:'Tagtada (artikulýasiýa profili, fonetika maşky)',s2:'Tagtada (öý işleri / esbaplar)',s3:'Sözleýiş we howpsuzlyk',tsk:'Işiň tertibi',cls:'VI «A» synpy',
+sn:['Sene','Ses','Bogun','Söz','Aňlatma'],pf:'Artikulýasiýa profili (çep tarapda)',br:'Dem alyş we dil, dodak gimnastikasy (3–4 gezek)',
+lunch:'Günortanlyk nahary',walk:'Açyk howada gezelenç',hw:'Öý ýumuşlaryny ýerine ýetirmek (özbaşdak taýýarlyk)',free:'Erkin wagt',eve:'Agşamky nahar, medeni dynç alyş, uka taýýarlyk, smenany tabşyrmak'},
+ru:{ttl:'План работы воспитателя',
+org:'Специальная школа-интернат №5 для глухих и слабослышащих детей Лебапского велаята',
+usr:'ПЛАН РАБОТЫ воспитателя VI «А» класса Юсупа Мурзаева на 2026-2027 учебный год',
+chT:'Кратко для проверки (шпаргалка):',
+chL:['<b>1. Доска:</b> слева артикуляционный профиль, фонетическая зарядка (дыхание, артикуляция, звук → слог → слово → фраза).','<b>2. Домашние задания и инвентарь</b> записаны на доске.','<b>3. Речь:</b> дети выходят к доске и чётко проговаривают слова.','<b>4. Безопасность и здоровье:</b> ежедневный инструктаж и контроль состояния здоровья.'],
+schH:'Недельный график',genH:'Генератор плана',lDay:'День:',lDate:'Дата:',lGoal:'Цель:',
+lPhon:'1. На доске: фонетическая зарядка (профиль, дыхание, звук, слог, слово, фраза):',lHw:'2. На доске: домашние задания / инвентарь:',lSp:'3. Речевой материал и безопасность:',
+gen:'Сформировать официальный план',res:'Вернуть шаблон',pr:'Печать / PDF',cp:'Копировать текст',copied:'Скопировано',
+days:['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'],off:'Выходной (D)',today:'Сегодня',
+cA:'Время и этап',cB:'Содержание работы',goalL:'Цель',s1:'На доске (артикуляционный профиль, фонетическая зарядка)',s2:'На доске (домашние задания / инвентарь)',s3:'Речевой материал и безопасность',tsk:'Порядок работы',cls:'VI «А» класс',
+sn:['Дата','Звук','Слог','Слово','Фраза'],pf:'Артикуляционный профиль (слева на доске)',br:'Дыхание и гимнастика языка, губ (3–4 раза)',
+lunch:'Обед',walk:'Прогулка на свежем воздухе',hw:'Выполнение домашних заданий (самоподготовка)',free:'Свободное время',eve:'Ужин, культурный отдых, подготовка ко сну, сдача смены'}
+};
+var Q={tk:{t:'Barlag režimi',c:'Ýap',d:'Şu günüň meýilnamasy',s:'Sesler',w:'Sözler',f:'Aňlatma',h:'Öý işi / esbaplar',o:'Işiň tertibi',q:'Soraglara jogap',
+qa:[['Näme üçin ses → bogun → söz → aňlatma?','Ýönekeýden çylşyrymlya: eşitme, görme we hereket arkaly berkidilýär.'],['Näme üçin tagtada profil?','Çagalar sesiň ýasalyşyny, dil we dodagyň ornuny görýärler.'],['Sesler nähili saýlanylýar?','Her çaga üçin sesler synp žurnalynda; mugallym bilen utgaşdyrýaryn.'],['Howpsuzlyk we saglyk?','Gündelik instruktaj, saglyk ýagdaýy lukman bilen barlanylýar.']]},
+ru:{t:'Режим проверки',c:'Закрыть',d:'План на сегодня',s:'Звуки',w:'Слова',f:'Фраза',h:'Домашнее задание / инвентарь',o:'Порядок работы',q:'Ответы на вопросы',
+qa:[['Почему порядок звук → слог → слово → фраза?','От простого к сложному; закрепление на слухо-зрительной основе.'],['Зачем профиль на доске?','Дети видят положение языка и губ при образовании звука.'],['Как выбираются звуки?','Для каждого ребёнка они указаны в классном журнале; согласовываю с учителем-сурдопедагогом.'],['Безопасность и здоровье?','Ежедневный инструктаж; состояние здоровья проверяется с медработником.']]}};
+// Day templates: ttl, goal, ph[sound,syllable,word,phrase], hw, sp, tasks [time, key-or-text]
+function T(a,b,c,d,e,f,g,h){return {tk:a,ru:b}}
+var DAY={
+1:{tk:{t:'Hereketli oýunlar we ruhy-ahlak terbiýesi',g:'Ruhy-ahlak terbiýesini ösdürmek, günüň tertibini berjaý etmek.',ph:['[A], [O], [U]','a-a-a, o-o-o, u-u-u','Alma, Oba, Un','Alma süýji.'],hw:'Matematika: №12; Ene dili: 45-nji gönükme.',x:'Hereketli oýunlar',y:'Ruhy-ahlak we sagdyn durmuş terbiýesi'},
+ru:{t:'Подвижные игры и духовно-нравственное воспитание',g:'Духовно-нравственное воспитание, соблюдение режима дня.',ph:['[А], [О], [У]','а-а-а, о-о-о, у-у-у','Арбуз, Окно, Утка','Арбуз сладкий.'],hw:'Математика: №12; Родной язык: упр. 45.',x:'Подвижные игры',y:'Духовно-нравственное воспитание и ЗОЖ'},a:1},
+2:{tk:{t:'Dynç güni (D)',g:'Dynç güni.',ph:['[P], [B], [M]','pa-po-pu, ba-bo-bu','Mekdep, Balyk, Park','Balyk süýji.'],hw:'—'},ru:{t:'Выходной день (D)',g:'Выходной день.',ph:['[П], [Б], [М]','па-по-пу, ба-бо-бу','Мама, Рыба, Парк','Рыба вкусная.'],hw:'—'},a:0,off:1},
+3:{tk:{t:'Jemgyýete peýdaly zähmet (+6b)',g:'Zähmete höweslendirmek, öz-özüňe hyzmat etmek endiklerini ösdürmek.',ph:['[T], [D], [N]','ta-ta-ta, at-ot-ut','Top, Depder, Nan','Depder arassa.'],hw:'Matematika: mysallar; Ene dili: düzgünler.'},ru:{t:'Общественно полезный труд (+6b)',g:'Привитие трудовых навыков и самообслуживания.',ph:['[Т], [Д], [Н]','та-та-та, ат-от-ут','Дом, Тетрадь, Нос','Тетрадь чистая.'],hw:'Математика: примеры; Родной язык: правила.'},a:2},
+4:{tk:{t:'Hojalyk zähmeti we medeni-taryhy terbiýe',g:'Hojalyk zähmetini öwretmek, taryhy we medeni mirasy («Astana baba», «Dehistan») öwrenmek.',ph:['[S], [Z]','sa-so-su, as-os-us','Suw, Sagat, Salam','Suw akýar: s-s-s.'],hw:'Eşikler, bedre, ütük, ýelim, kitaplar.',x:'Hojalyk zähmeti (egin-eşik, synp otagy)',y:'Medeni-taryhy terbiýe («Astana baba», «Dehistan»)'},
+ru:{t:'Хозяйственный труд и культурно-историческое воспитание',g:'Обучение хозяйственному труду, изучение наследия («Астана-баба», «Дехистан»).',ph:['[С], [З]','са-со-су, ас-ос-ус','Сад, Зонт, Звезда','Вода течёт: с-с-с.'],hw:'Вешалки, ведро, утюг, клей, книги.',x:'Хозяйственный труд (одежда, классная комната)',y:'Культурно-историческое воспитание («Астана-баба», «Дехистан»)'},a:1},
+5:{tk:{t:'Milli oýunlar we raýat-watançylyk terbiýesi',g:'Watançylyk duýgularyny terbiýelemek, milli oýunlary guramak.',ph:['[Ş], [Ž], [Ç]','şa-şa-şa, aş-oş-uş','Şorba, Şeker, Çaý','Şorba yssy.'],hw:'Tebigy bilim: soraglara jogap; Iňlis dili.'},ru:{t:'Национальные игры и гражданско-патриотическое воспитание',g:'Воспитание патриотизма, проведение национальных игр.',ph:['[Ш], [Ж], [Ч]','ша-ша-ша, аш-ош-уш','Шапка, Жук, Чай','Чай горячий.'],hw:'Естествознание: ответы на вопросы; Английский язык.'},a:3},
+6:{tk:{t:'Arassaçylyk we abadanlaşdyryş işleri (günüň 2-nji ýarymy)',g:'Arassaçylyk işlerini guramak, şahsy arassaçylyk endiklerini ösdürmek.',ph:['[R], [L]','ra-ro-ru, ar-or-ur','Lale, Park, Ruh','Lale gözel.'],hw:'Sabyn, şampun, diş şetkasy, el-sülgi.'},ru:{t:'День чистоты и благоустройства (2-я половина дня)',g:'Организация дня чистоты, привитие навыков личной гигиены.',ph:['[Р], [Л]','ра-ро-ру, ар-ор-ур','Рыба, Лампа, Тюльпан','Лампа горит.'],hw:'Мыло, шампунь, зубная щётка, полотенце.'},a:4},
+0:{tk:{t:'Milli we sport oýunlary, gezelençler (günüň 1-nji ýarymy)',g:'Dynç gününi guramak, sport oýunlaryny geçirmek.',ph:['Gaýtalaw','a-sa-ra','Oýun, Park','Biz oýnadyk.'],hw:'Sport esbaplary, oýunçaklar.'},ru:{t:'Национальные и спортивные игры, прогулки (1-я половина дня)',g:'Организация отдыха, проведение спортивных игр.',ph:['Повторение','а-са-ра','Игра, Парк','Мы играли.'],hw:'Спортивный инвентарь, игры.'},a:5}
+};
+// afternoon blocks: 0 none(off) 1 full 2 wed 3 fri 4 sat 5 sun
+function tasks(k,l){var d=DAY[k][l],u=U[l],a=DAY[k].a;
+ var full=[['14:00–14:40',u.lunch],['14:45–15:00',u.walk],['15:00–16:00',d.x||''],['16:00–18:00',u.hw],['18:00–18:30',d.y||''],['18:30–19:00',u.free],['19:00–21:00',u.eve]];
+ if(a==0)return [[u.off,'']];
+ if(a==1)return full;
+ if(a==2)return [['07:00–08:30 (+6b)',l=='tk'?'Smenany kabul etmek, ertirlik':'Приём смены, завтрак'],['15:00–16:00',l=='tk'?'Jemgyýete peýdaly zähmet':'Общественно полезный труд'],['16:00–18:00',u.hw],['18:00–18:30',l=='tk'?'Durmuş (gözellik, ekologiýa) terbiýesi':'Экологическое и эстетическое воспитание']];
+ if(a==3)return [['15:00–16:00',l=='tk'?'Milli oýunlar':'Национальные игры'],['16:00–18:00',u.hw],['18:00–18:30',l=='tk'?'Raýat-watançylyk terbiýesi':'Гражданско-патриотическое воспитание']];
+ if(a==4)return [[l=='tk'?'Günüň 2-nji ýarymy':'2-я половина дня',l=='tk'?'Arassaçylyk we abadanlaşdyryş (hammam)':'День чистоты и благоустройства (баня)'],['16:00–18:00',u.hw],['19:00–21:00',l=='tk'?'Agşamky nahar, smenany tabşyrmak':'Ужин, сдача смены']];
+ return [[l=='tk'?'Günüň 1-nji ýarymy':'1-я половина дня',l=='tk'?'Milli we sport oýunlary, gezelençler':'Национальные и спортивные игры, прогулки'],['18:30–19:00',u.free],['19:00–21:00',l=='tk'?'Agşamky nahar, uka taýýarlyk':'Ужин, подготовка ко сну']];}
+function phonText(k,l){var u=U[l],p=DAY[k][l].ph,s=u.sn;
+ return u.pf+'\n0) '+u.br+'\n1) '+s[1]+': '+p[0]+'\n2) '+s[2]+': '+p[1]+'\n3) '+s[3]+': '+p[2]+'\n4) '+s[4]+': '+p[3];}
+function speechText(k,l){var w=DAY[k][l].ph[2];return l=='tk'?'«Salam, çagalar! Okuwçylar tagtanyň ýanyna çykyp profil boýunça sözleri aýdyň aýdýarlar: '+w+'. Howpsuzlyk instruktajy geçirilýär, saglyk ýagdaýy barlanylýar.»':'«Здравствуйте, дети! Дети выходят к доске и, опираясь на профиль, чётко проговаривают слова: '+w+'. Проводится инструктаж по технике безопасности, проверяется состояние здоровья.»';}
+var L='tk';
+function g(i){return document.getElementById(i)}
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+function e(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function box(s){return e(s).replace(/\n/g,'<br>')}
+function day(){return +g('daySel').value}
+function render(){var u=U[L];document.documentElement.lang=L;
+ ['ttl','org','usr','chT','schH','genH','lDay','lDate','lGoal','lPhon','lHw','lSp'].forEach(function(i){g(i).textContent=u[i]});
+ g('chL').innerHTML=u.chL.map(function(x){return '<li>'+x+'</li>'}).join('');
+ g('bGen').textContent=u.gen;g('bRes').textContent=u.res;g('bPr').textContent=u.pr;g('bCp').textContent=u.cp;g('lb').textContent=L=='tk'?'RU':'TK';
+ var cur=g('daySel').value||String(new Date().getDay());var s=g('daySel');s.innerHTML='';
+ KEYS.forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=u.days[k]+' — '+DAY[k][L].t;if(String(k)==cur)o.selected=true;s.appendChild(o)});
+ var td=new Date().getDay(),h='';
+ KEYS.forEach(function(k){var it=SCH[k],t=k==td;h+='<div class="row'+(t?' today':'')+'"><div><b>'+u.days[k]+'</b>'+(t?' <small style="color:var(--brand)">('+u.today+')</small>':'')+'</div><span class="badge'+(it[1]?' off':'')+'">'+(it[1]?u.off:it[0])+'</span></div>'});
+ g('sch').innerHTML=h;
+ if(!g('dateIn').value){var n=new Date();g('dateIn').value=n.getFullYear()+'-'+('0'+(n.getMonth()+1)).slice(-2)+'-'+('0'+n.getDate()).slice(-2)}
+ loadDay();}
+function fill(k){var d=DAY[k][L];g('goal').value=d.g;g('phon').value=phonText(k,L);g('hw').value=d.hw;g('sp').value=speechText(k,L)}
+function loadDay(){var k=day(),sv=ls('tp_p_'+L+k);if(sv){try{var o=JSON.parse(sv);g('goal').value=o.g;g('phon').value=o.p;g('hw').value=o.h;g('sp').value=o.s}catch(x){fill(k)}}else fill(k);build(true)}
+function save(){ls('tp_p_'+L+day(),JSON.stringify({g:g('goal').value,p:g('phon').value,h:g('hw').value,s:g('sp').value}))}
+function resetDay(){try{localStorage.removeItem('tp_p_'+L+day())}catch(x){}fill(day());build(true)}
+function fmt(v){var p=v.split('-');return p.length==3?p[2]+'.'+p[1]+'.'+p[0]:v}
+function build(quiet){var u=U[L],k=day(),d=DAY[k][L];
+ var h='<div class="card"><h2 style="text-align:center">'+e(u.ttl)+'</h2><div style="text-align:center;font-size:13px;margin-bottom:10px"><b>'+u.sn[0]+':</b> '+e(fmt(g('dateIn').value))+'</div><div class="tw"><table><tr><th style="width:25%">'+u.cA+'</th><th>'+u.cB+'</th></tr><tr><td><b>'+e(d.t)+'</b><br><br><small>'+u.cls+'</small></td><td>';
+ h+='<b>'+u.goalL+':</b> '+box(g('goal').value)+'<br><br><b>1. '+u.s1+':</b><br><i>'+box(g('phon').value)+'</i><br><br><b>2. '+u.s2+':</b> <i>'+box(g('hw').value)+'</i><br><br><b>3. '+u.s3+':</b><br><i>'+box(g('sp').value)+'</i><br><br><b>'+u.tsk+':</b><ul>';
+ tasks(k,L).forEach(function(t,i){h+='<li>'+(i+1)+'. '+e(t[0])+(t[1]?': '+e(t[1]):'')+'</li>'});
+ g('out').innerHTML=h+'</ul></td></tr></table></div></div>';
+ if(quiet!==true)g('out').scrollIntoView({behavior:'smooth'});}
+function copyPlan(){var t=g('out').innerText,b=g('bCp'),u=U[L];
+ function ok(){b.textContent=u.copied;setTimeout(function(){b.textContent=u.cp},1500)}
+ if(navigator.clipboard)navigator.clipboard.writeText(t).then(ok,fb);else fb();
+ function fb(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');ok()}catch(x){}a.remove()}}
+function chk(on){var c=g('chk');if(!on){c.className='chk';return}var k=day(),d=DAY[k][L],q=Q[L],u=U[L],h='<button class="sm" onclick="chk(0)">✕ '+q.c+'</button><h3>'+q.d+'</h3><div class="big">'+e(u.days[k])+' — '+e(d.t)+'</div>';
+ h+='<h3>'+q.s+'</h3>'+e(d.ph[0])+' · '+e(d.ph[1])+'<h3>'+q.w+'</h3><span class="big">'+e(d.ph[2])+'</span><h3>'+q.f+'</h3>'+e(d.ph[3])+'<h3>'+q.h+'</h3>'+e(d.hw)+'<h3>'+q.o+'</h3>';
+ tasks(k,L).forEach(function(t){h+=e(t[0])+(t[1]?': '+e(t[1]):'')+'<br>'});
+ h+='<h3>'+q.q+'</h3>';q.qa.forEach(function(x){h+='<div class="qa"><b>'+e(x[0])+'</b><br>'+e(x[1])+'</div>'});
+ c.innerHTML=h;c.className='chk on';c.scrollTop=0}
+function setLang(){L=L=='tk'?'ru':'tk';ls('tp_lang',L);render()}
+function setTheme(){var r=document.documentElement,d=r.getAttribute('data-theme')=='dark';if(d)r.removeAttribute('data-theme');else r.setAttribute('data-theme','dark');ls('tp_theme',d?'light':'dark')}
+L=ls('tp_lang');if(!U[L])L='tk';if(ls('tp_theme')=='dark')document.documentElement.setAttribute('data-theme','dark');
+render();
+</script>
+</body>
+</html>
